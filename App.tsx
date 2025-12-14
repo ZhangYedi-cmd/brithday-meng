@@ -11,6 +11,7 @@ import Hall from './pages/Hall';
 import RadioGame from './pages/RadioGame';
 import PostOfficeGame from './pages/PostOfficeGame';
 import CakeGame from './pages/CakeGame';
+import StarBottleGame from './pages/StarBottleGame'; // Import
 import Finale from './pages/Finale';
 
 // Context definition
@@ -36,27 +37,26 @@ const App: React.FC = () => {
 
   // State initialization with localStorage
   const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('birthday_app_state_v1');
+    const saved = localStorage.getItem('birthday_app_state_v2'); // Increment version to reset state for new game
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Reset page to Hall if reloading in middle of game, or Loading if fresh
       return { 
         ...parsed, 
         page: Page.Loading,
-        showIntroModal: true // Always show modal on refresh for better DX/UX
+        showIntroModal: true 
       };
     }
     return {
       page: Page.Loading,
-      completed: { radio: false, post: false, cake: false },
-      mute: true, // Default mute as per req
+      completed: { radio: false, post: false, cake: false, starBottle: false },
+      mute: true,
       showIntroModal: true
     };
   });
 
   // Persistence
   useEffect(() => {
-    localStorage.setItem('birthday_app_state_v1', JSON.stringify(state));
+    localStorage.setItem('birthday_app_state_v2', JSON.stringify(state));
   }, [state]);
 
   // Audio Control Effect
@@ -66,8 +66,7 @@ const App: React.FC = () => {
         if (state.mute) {
             audioRef.current.pause();
         } else {
-            // Attempt to play. Note: user interaction is required first, 
-            // which is handled by startExperience()
+            // Attempt to play
             audioRef.current.play().catch(e => {
                 console.log("Audio autoplay prevented:", e);
             });
@@ -81,7 +80,6 @@ const App: React.FC = () => {
       setState(prev => ({ ...prev, completed: { ...prev.completed, [game]: true } })),
     toggleMute: () => setState(prev => ({ ...prev, mute: !prev.mute })),
     closeIntroModal: () => setState(prev => ({ ...prev, showIntroModal: false })),
-    // Specific action to start music AND close modal
     startExperience: () => {
         setState(prev => ({ ...prev, showIntroModal: false, mute: false }));
     }
@@ -92,8 +90,7 @@ const App: React.FC = () => {
     <ModalWrapper onClose={actions.startExperience}>
       <h2 className="text-2xl font-serif text-gold-200 mb-4">{USER_NAME}，生日快乐 ✨</h2>
       <div className="space-y-3 text-gold-100/80 mb-8 font-light leading-relaxed">
-        <p>我给你准备了三份小礼物。</p>
-        <p>不用很久，3 分钟就能拆完。</p>
+        <p>我给你准备了四份小礼物。</p>
         <p>今天你只负责开心。</p>
         <p className="text-xs text-white/40 mt-2">* 点击开始后，会有背景音乐哦 🎵</p>
       </div>
@@ -107,11 +104,9 @@ const App: React.FC = () => {
   return (
     <AppContext.Provider value={{ ...state, ...actions }}>
       <div className="relative min-h-[100dvh] w-full text-base font-sans antialiased overflow-hidden">
-        {/* Audio Element */}
         <audio ref={audioRef} src={BG_MUSIC_URL} loop preload="auto" />
         
-        {/* Only show Starfield if NOT on Hall page (Hall has its own StageBackground) */}
-        {state.page !== Page.Hall && (
+        {state.page !== Page.Hall && state.page !== Page.StarBottle && (
              <Starfield paused={state.page !== Page.Loading} />
         )}
         
@@ -128,6 +123,7 @@ const App: React.FC = () => {
           {state.page === Page.Radio && <RadioGame key="radio" />}
           {state.page === Page.PostOffice && <PostOfficeGame key="post" />}
           {state.page === Page.Cake && <CakeGame key="cake" />}
+          {state.page === Page.StarBottle && <StarBottleGame key="starbottle" />}
           {state.page === Page.Finale && <Finale key="finale" />}
         </AnimatePresence>
       </div>

@@ -4,6 +4,7 @@ export enum Page {
   Radio = 'RADIO',
   PostOffice = 'POST_OFFICE',
   Cake = 'CAKE',
+  StarBottle = 'STAR_BOTTLE', // New Page
   Finale = 'FINALE',
 }
 
@@ -13,6 +14,7 @@ export interface AppState {
     radio: boolean;
     post: boolean;
     cake: boolean;
+    starBottle: boolean; // New State
   };
   mute: boolean;
   showIntroModal: boolean;
