@@ -111,21 +111,24 @@ const App: React.FC = () => {
              <Starfield paused={state.page !== Page.Loading} />
         )}
         
+        {/* Main Page Transitions */}
         <AnimatePresence mode="wait">
           {state.page === Page.Loading && <Loading key="loading" />}
           
-          {state.page === Page.Hall && (
-            <>
-              <Hall key="hall" />
-              {state.showIntroModal && <IntroModal />}
-            </>
-          )}
+          {/* Hall is now a direct child, ensuring stable transitions */}
+          {state.page === Page.Hall && <Hall key="hall" />}
 
-          {/* RadioGame removed */}
           {state.page === Page.PostOffice && <PostOfficeGame key="post" />}
           {state.page === Page.Cake && <CakeGame key="cake" />}
           {state.page === Page.StarBottle && <StarBottleGame key="starbottle" />}
           {state.page === Page.Finale && <Finale key="finale" />}
+        </AnimatePresence>
+
+        {/* Modal Layer rendered independently to avoid interfering with page transitions */}
+        <AnimatePresence>
+            {state.page === Page.Hall && state.showIntroModal && (
+                <IntroModal key="intro-modal" />
+            )}
         </AnimatePresence>
       </div>
     </AppContext.Provider>
