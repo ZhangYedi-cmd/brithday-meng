@@ -32,20 +32,30 @@ export const useApp = () => {
 };
 
 // Intro Modal Component defined outside to maintain reference
-const IntroModal: React.FC<{ onStart: () => void }> = ({ onStart }) => (
-  <ModalWrapper onClose={onStart}>
-    <h2 className="text-2xl font-serif text-gold-200 mb-4">{USER_NAME}，生日快乐 ✨</h2>
-    <div className="space-y-3 text-gold-100/80 mb-8 font-light leading-relaxed">
-      <p>我给你准备了三份小礼物。</p>
-      <p>今天你只负责开心。</p>
-      <p className="text-xs text-white/40 mt-2">* 点击开始后，会有背景音乐哦 🎵</p>
-    </div>
-    <div className="flex flex-col gap-3">
-      <Button onClick={onStart}>开始拆礼物 →</Button>
-      <Button variant="ghost" onClick={onStart} className="text-sm">先看一眼页面</Button>
-    </div>
-  </ModalWrapper>
-);
+const IntroModal: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onStart();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onStart]);
+
+  return (
+    <ModalWrapper>
+      <div className="text-center py-4 px-2">
+        <h2 className="text-2xl font-serif text-gold-200 mb-6">{USER_NAME}，生日快乐 ✨</h2>
+        <div className="space-y-4 text-gold-100/80 font-light leading-relaxed mb-4">
+          <p>我给你准备了三份小礼物。</p>
+          <p>今天你只负责开心。</p>
+        </div>
+        {/* Simple Loading Indicator for the auto-dismiss timer */}
+        <div className="flex justify-center mt-8 opacity-50">
+            <div className="w-5 h-5 border-2 border-gold-400/30 border-t-gold-400 rounded-full animate-spin" />
+        </div>
+      </div>
+    </ModalWrapper>
+  );
+};
 
 const App: React.FC = () => {
   // Audio Ref
