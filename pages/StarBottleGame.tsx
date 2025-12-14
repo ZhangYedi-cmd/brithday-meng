@@ -7,22 +7,22 @@ import { CanvasScene } from '../components/StarBottle/CanvasScene';
 import { BlessingPanel } from '../components/StarBottle/BlessingPanel';
 import { Controls } from '../components/StarBottle/Controls';
 import { getRandomMessage } from '../data/starMessages';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, Sparkles, Star } from 'lucide-react';
 
 const TARGET_STARS = 18;
 const SHAKE_COOLDOWN_SEC = 3;
 const VACUUM_COOLDOWN_SEC = 3;
 
 const StarBottleGame: React.FC = () => {
-    const { setPage, markCompleted } = useApp();
+    const { setPage, markCompleted, completed } = useApp();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const sceneRef = useRef<CanvasScene | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Game State
+    const [gameState, setGameState] = useState<'intro' | 'playing' | 'result'>('intro');
     const [progress, setProgress] = useState(0);
     const [currentMessage, setCurrentMessage] = useState('');
-    const [showResult, setShowResult] = useState(false);
     
     // Skills State
     const [canShake, setCanShake] = useState(true);
@@ -32,6 +32,16 @@ const StarBottleGame: React.FC = () => {
     const [isVacuuming, setIsVacuuming] = useState(false);
     const [vacuumCD, setVacuumCD] = useState(0);
     const vacuumTimerRef = useRef<number>(0);
+
+    // Intro Timer
+    useEffect(() => {
+        if (gameState === 'intro') {
+            const timer = setTimeout(() => {
+                setGameState('playing');
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [gameState]);
 
     // Initialization
     useEffect(() => {
@@ -60,7 +70,7 @@ const StarBottleGame: React.FC = () => {
     useEffect(() => {
         if (progress >= TARGET_STARS) {
             setTimeout(() => {
-                setShowResult(true);
+                setGameState('result');
                 if (sceneRef.current) {
                     sceneRef.current.spawnExplosion(sceneRef.current.width/2, sceneRef.current.height - 50, 50, '#fbbf24');
                 }
@@ -82,6 +92,7 @@ const StarBottleGame: React.FC = () => {
 
     // Interaction Handlers
     const handleCanvasClick = (e: React.MouseEvent | React.TouchEvent) => {
+        if (gameState !== 'playing') return;
         if (progress >= TARGET_STARS) return;
         
         // Normalize coordinates
@@ -145,8 +156,38 @@ const StarBottleGame: React.FC = () => {
         setPage(Page.Hall);
     };
 
+    const isLastGame = completed.post && completed.cake;
+
     return (
         <ScreenWrapper className="px-0 relative h-full flex flex-col bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#0f172a]">
+            {/* Intro Overlay */}
+            <AnimatePresence>
+                {gameState === 'intro' && (
+                    <motion.div 
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-night-950/90 backdrop-blur-sm cursor-pointer"
+                        onClick={() => setGameState('playing')}
+                    >
+                         <motion.div
+                            initial={{ scale: 0.9, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            transition={{ duration: 0.8 }}
+                            className="text-center px-6"
+                        >
+                            <div className="w-20 h-20 mx-auto bg-gold-400/10 rounded-full flex items-center justify-center mb-8 border border-gold-400/20 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
+                                <Star className="text-gold-300 w-8 h-8" fill="currentColor" />
+                            </div>
+                            <h2 className="text-2xl font-serif text-white mb-6 tracking-wide">把散落在银河的星星装进瓶子</h2>
+                            <div className="space-y-4 text-gold-100/60 font-light text-sm tracking-widest leading-loose">
+                                <p>收集满 18 颗，就能兑换一个好运 ✨</p>
+                                <p>轻轻摇晃，还能捕捉流星</p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Header */}
             <div className="absolute top-4 left-4 z-20 flex items-center">
                 <button onClick={() => setPage(Page.Hall)} className="p-2 text-white/50 hover:text-white">
@@ -203,7 +244,7 @@ const StarBottleGame: React.FC = () => {
 
             {/* Result Modal */}
             <AnimatePresence>
-                {showResult && (
+                {gameState === 'result' && (
                     <ModalWrapper>
                         <div className="text-center">
                             <div className="w-20 h-20 mx-auto bg-gold-400/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
@@ -214,6 +255,9 @@ const StarBottleGame: React.FC = () => {
                                 所有的星星都落进了瓶子里，<br/>
                                 所有的温柔都会落在你身上。
                             </p>
+                            {isLastGame && (
+                                <p className="text-gold-300 text-sm mb-6 animate-pulse font-serif">快去领取最终的礼物吧～</p>
+                            )}
                             <Button fullWidth onClick={handleFinish}>收下这份星光</Button>
                         </div>
                     </ModalWrapper>

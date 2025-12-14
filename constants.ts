@@ -117,9 +117,9 @@ export const ENVELOPES: EnvelopeCategory[] = [
 ];
 
 export const FINALE_MESSAGE = `愿你这一岁，心更松一点，笑更真一点，生活更顺心一点。
-
-你认真、善良，也慢慢长成了一个有自己光的人。
-
-愿大萌永远像兔兔一样可可爱爱 🐰`;
+你认真、善良，
+也在不知不觉中，长成了一个有自己光的人。
+那种光，不张扬，却很真。
+愿大萌永远像兔兔一样可爱 🐰`;
 
 export const USER_NAME = "大萌";

@@ -196,7 +196,7 @@ const Hall: React.FC = () => {
                 <div className="col-span-2 flex justify-center">
                     <div className="w-[calc(50%-0.5rem)] min-w-[150px]">
                         <GiftCardItem 
-                            title="蛋糕点灯" 
+                            title="做蛋糕、点蜡烛！" 
                             icon={Cake}
                             completed={completed.cake}
                             onClick={() => setPage(Page.Cake)}

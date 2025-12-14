@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../App';
 import { Page, EnvelopeCategory } from '../types';
@@ -41,12 +41,21 @@ const Postmark = () => {
 };
 
 const PostOfficeGame: React.FC = () => {
-    const { setPage, markCompleted } = useApp();
+    const { setPage, markCompleted, completed } = useApp();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [phase, setPhase] = useState<'select' | 'animating' | 'reading' | 'summary'>('select');
+    const [phase, setPhase] = useState<'intro' | 'select' | 'animating' | 'reading' | 'summary'>('intro');
     const [currentReadingIndex, setCurrentReadingIndex] = useState(0);
     // Store selected messages to persist through reading phase
     const [replies, setReplies] = useState<{title: string, msg: string}[]>([]);
+
+    useEffect(() => {
+        if (phase === 'intro') {
+            const timer = setTimeout(() => {
+                setPhase('select');
+            }, 2500); // Display for 2.5s
+            return () => clearTimeout(timer);
+        }
+    }, [phase]);
 
     const getIcon = (id: string) => {
         switch(id) {
@@ -102,9 +111,37 @@ const PostOfficeGame: React.FC = () => {
         setPhase('reading');
     }
 
+    const isLastGame = completed.starBottle && completed.cake;
+
     return (
         <ScreenWrapper className="px-5 py-6">
             <AnimatePresence mode="wait">
+                {phase === 'intro' && (
+                    <motion.div 
+                        key="intro"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex flex-col items-center justify-center h-full text-center cursor-pointer"
+                        onClick={() => setPhase('select')}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <div className="w-20 h-20 mx-auto bg-white/5 rounded-full flex items-center justify-center mb-8 border border-white/10 shadow-[0_0_30px_rgba(251,191,36,0.1)]">
+                                <Sparkles className="text-gold-300 w-8 h-8" />
+                            </div>
+                            <h2 className="text-2xl font-serif text-white mb-6 tracking-wide">选 3 个你最想实现的小愿望</h2>
+                            <div className="space-y-4 text-gold-100/60 font-light text-sm tracking-widest leading-loose">
+                                <p>投进信封里，就当交给宇宙保管</p>
+                                <p>等一封温柔的回信 ✉️</p>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+
                 {phase === 'select' && (
                     <motion.div 
                         key="select"
@@ -264,7 +301,12 @@ const PostOfficeGame: React.FC = () => {
                         <div className="w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(74,222,128,0.2)]">
                             <Check size={40} />
                         </div>
-                        <h2 className="text-2xl font-serif text-white">你的 3 封回信已送达</h2>
+                        <div className="text-center">
+                            <h2 className="text-2xl font-serif text-white">你的 3 封回信已送达</h2>
+                            {isLastGame && (
+                                <p className="text-gold-300 text-sm mt-3 animate-pulse font-serif">快去领取最终的礼物吧～</p>
+                            )}
+                        </div>
                         
                         <div className="w-full space-y-3 mt-8">
                             <Button fullWidth onClick={handleFinish}>收好回信，回大厅</Button>
