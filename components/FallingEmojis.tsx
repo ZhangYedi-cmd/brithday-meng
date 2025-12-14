@@ -20,7 +20,8 @@ export const FallingEmojis: React.FC = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-[60] overflow-hidden h-full w-full">
+    // Changed z-[60] to z-40 to ensure it is BELOW the IntroModal (z-50) but ABOVE Hall content (z-20)
+    <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden h-full w-full">
       <AnimatePresence>
         {items.map((item) => (
           <motion.div

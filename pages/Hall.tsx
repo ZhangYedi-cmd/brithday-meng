@@ -5,6 +5,7 @@ import { Page } from '../types';
 import { USER_NAME } from '../constants';
 import { GlassCard, ScreenWrapper } from '../components/Shared';
 import { CheckCircle2, Mail, Cake, Gift, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { FallingEmojis } from '../components/FallingEmojis';
 
 // --- Stage Background Component ---
 const StageBackground = () => {
@@ -108,7 +109,7 @@ const GiftCardItem = ({
 );
 
 const Hall: React.FC = () => {
-  const { setPage, completed } = useApp();
+  const { setPage, completed, showIntroModal } = useApp();
   // Ensure we check all 3 keys
   const progress = Object.values(completed).filter(Boolean).length;
   const allCompleted = progress === 3;
@@ -119,6 +120,9 @@ const Hall: React.FC = () => {
     <ScreenWrapper className="h-full relative overflow-hidden">
       {/* Background stays fixed and full screen */}
       <StageBackground />
+      
+      {/* Celebration Emojis - Only triggered after modal closes */}
+      {!showIntroModal && <FallingEmojis />}
       
       {/* Scrollable Container covering the whole screen, sitting on top of background */}
       <div className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden no-scrollbar px-5 pt-4 pb-24 flex flex-col">
