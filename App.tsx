@@ -31,20 +31,35 @@ export const useApp = () => {
   return context;
 };
 
+// Intro Modal Component defined outside to maintain reference
+const IntroModal: React.FC<{ onStart: () => void }> = ({ onStart }) => (
+  <ModalWrapper onClose={onStart}>
+    <h2 className="text-2xl font-serif text-gold-200 mb-4">{USER_NAME}，生日快乐 ✨</h2>
+    <div className="space-y-3 text-gold-100/80 mb-8 font-light leading-relaxed">
+      <p>我给你准备了三份小礼物。</p>
+      <p>今天你只负责开心。</p>
+      <p className="text-xs text-white/40 mt-2">* 点击开始后，会有背景音乐哦 🎵</p>
+    </div>
+    <div className="flex flex-col gap-3">
+      <Button onClick={onStart}>开始拆礼物 →</Button>
+      <Button variant="ghost" onClick={onStart} className="text-sm">先看一眼页面</Button>
+    </div>
+  </ModalWrapper>
+);
+
 const App: React.FC = () => {
   // Audio Ref
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // State initialization with localStorage
-  // Updated key to v3 to reset state due to removing 'radio'
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem('birthday_app_state_v3'); 
     if (saved) {
       const parsed = JSON.parse(saved);
       return { 
         ...parsed, 
-        page: Page.Loading,
-        showIntroModal: true 
+        page: Page.Loading, // Always reload with animation
+        showIntroModal: true // Always verify modal on reload
       };
     }
     return {
@@ -86,25 +101,14 @@ const App: React.FC = () => {
     }
   };
 
-  // Intro Modal Component
-  const IntroModal = () => (
-    <ModalWrapper onClose={actions.startExperience}>
-      <h2 className="text-2xl font-serif text-gold-200 mb-4">{USER_NAME}，生日快乐 ✨</h2>
-      <div className="space-y-3 text-gold-100/80 mb-8 font-light leading-relaxed">
-        <p>我给你准备了三份小礼物。</p>
-        <p>今天你只负责开心。</p>
-        <p className="text-xs text-white/40 mt-2">* 点击开始后，会有背景音乐哦 🎵</p>
-      </div>
-      <div className="flex flex-col gap-3">
-        <Button onClick={actions.startExperience}>开始拆礼物 →</Button>
-        <Button variant="ghost" onClick={actions.startExperience} className="text-sm">先看一眼页面</Button>
-      </div>
-    </ModalWrapper>
-  );
-
   return (
     <AppContext.Provider value={{ ...state, ...actions }}>
-      <div className="relative min-h-[100dvh] w-full text-base font-sans antialiased overflow-hidden">
+      {/* 
+         CRITICAL FIX: Changed min-h-[100dvh] to h-[100dvh].
+         Standard 'h-full' on children requires an explicit height on the parent.
+         Without this, absolute positioned children inside relative containers in Hall.tsx collapse to 0 height.
+      */}
+      <div className="relative h-[100dvh] w-full text-base font-sans antialiased overflow-hidden bg-night-950">
         <audio ref={audioRef} src={BG_MUSIC_URL} loop preload="auto" />
         
         {state.page !== Page.Hall && state.page !== Page.StarBottle && (
@@ -115,7 +119,6 @@ const App: React.FC = () => {
         <AnimatePresence mode="wait">
           {state.page === Page.Loading && <Loading key="loading" />}
           
-          {/* Hall is now a direct child, ensuring stable transitions */}
           {state.page === Page.Hall && <Hall key="hall" />}
 
           {state.page === Page.PostOffice && <PostOfficeGame key="post" />}
@@ -124,10 +127,10 @@ const App: React.FC = () => {
           {state.page === Page.Finale && <Finale key="finale" />}
         </AnimatePresence>
 
-        {/* Modal Layer rendered independently to avoid interfering with page transitions */}
+        {/* Modal Layer */}
         <AnimatePresence>
             {state.page === Page.Hall && state.showIntroModal && (
-                <IntroModal key="intro-modal" />
+                <IntroModal key="intro-modal" onStart={actions.startExperience} />
             )}
         </AnimatePresence>
       </div>

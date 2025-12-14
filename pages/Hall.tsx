@@ -30,7 +30,8 @@ const StageBackground = () => {
     };
 
     return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        /* Added z-0 explicitly to create a lower stacking context than the content (z-10) */
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
             <div className="absolute inset-0 z-0" style={spotlightStyle} />
             <motion.div 
                 className="absolute inset-0 z-10"
