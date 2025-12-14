@@ -8,10 +8,10 @@ import { ModalWrapper, Button, cn } from './components/Shared';
 // Pages
 import Loading from './pages/Loading';
 import Hall from './pages/Hall';
-import RadioGame from './pages/RadioGame';
+// RadioGame removed
 import PostOfficeGame from './pages/PostOfficeGame';
 import CakeGame from './pages/CakeGame';
-import StarBottleGame from './pages/StarBottleGame'; // Import
+import StarBottleGame from './pages/StarBottleGame';
 import Finale from './pages/Finale';
 
 // Context definition
@@ -36,8 +36,9 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // State initialization with localStorage
+  // Updated key to v3 to reset state due to removing 'radio'
   const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('birthday_app_state_v2'); // Increment version to reset state for new game
+    const saved = localStorage.getItem('birthday_app_state_v3'); 
     if (saved) {
       const parsed = JSON.parse(saved);
       return { 
@@ -48,7 +49,7 @@ const App: React.FC = () => {
     }
     return {
       page: Page.Loading,
-      completed: { radio: false, post: false, cake: false, starBottle: false },
+      completed: { post: false, cake: false, starBottle: false },
       mute: true,
       showIntroModal: true
     };
@@ -56,7 +57,7 @@ const App: React.FC = () => {
 
   // Persistence
   useEffect(() => {
-    localStorage.setItem('birthday_app_state_v2', JSON.stringify(state));
+    localStorage.setItem('birthday_app_state_v3', JSON.stringify(state));
   }, [state]);
 
   // Audio Control Effect
@@ -90,7 +91,7 @@ const App: React.FC = () => {
     <ModalWrapper onClose={actions.startExperience}>
       <h2 className="text-2xl font-serif text-gold-200 mb-4">{USER_NAME}，生日快乐 ✨</h2>
       <div className="space-y-3 text-gold-100/80 mb-8 font-light leading-relaxed">
-        <p>我给你准备了四份小礼物。</p>
+        <p>我给你准备了三份小礼物。</p>
         <p>今天你只负责开心。</p>
         <p className="text-xs text-white/40 mt-2">* 点击开始后，会有背景音乐哦 🎵</p>
       </div>
@@ -120,7 +121,7 @@ const App: React.FC = () => {
             </>
           )}
 
-          {state.page === Page.Radio && <RadioGame key="radio" />}
+          {/* RadioGame removed */}
           {state.page === Page.PostOffice && <PostOfficeGame key="post" />}
           {state.page === Page.Cake && <CakeGame key="cake" />}
           {state.page === Page.StarBottle && <StarBottleGame key="starbottle" />}

@@ -36,7 +36,7 @@ const WeatherOption = ({ icon: Icon, label, selected, onClick }: any) => (
 );
 
 const RadioGame: React.FC = () => {
-    const { setPage, markCompleted } = useApp();
+    const { setPage } = useApp();
     const [step, setStep] = useState<'weather' | 'player' | 'done'>('weather');
     const [weather, setWeather] = useState('');
     const [quoteIndex, setQuoteIndex] = useState(-1);
@@ -61,7 +61,6 @@ const RadioGame: React.FC = () => {
     const handleComplete = () => {
         setStep('done');
         setTimeout(() => {
-            markCompleted('radio');
             setPage(Page.Hall);
         }, 2000);
     };

@@ -1,9 +1,9 @@
-import React, { useMemo, useRef, useReducer } from 'react';
+import React, { useMemo, useRef, useReducer, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../App';
 import { Page, Decoration } from '../types';
 import { ScreenWrapper, Button, cn } from '../components/Shared';
-import { ArrowLeft, Flame, Sparkles } from 'lucide-react';
+import { ArrowLeft, Flame, Sparkles, Ban } from 'lucide-react';
 
 // -----------------------------
 // Assets
@@ -17,6 +17,7 @@ const ASSETS = {
 };
 
 const DEBUG_ANCHOR = false;
+const MAX_CANDLES = 18;
 
 // -----------------------------
 // Types
@@ -146,8 +147,7 @@ function reducer(state: State, action: Action): State {
 }
 
 // -----------------------------
-// Placement engine (更窄范围)
-// 坐标含义：永远是“底部中心落点”
+// Placement engine
 // -----------------------------
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
@@ -166,13 +166,11 @@ function computePlacement(areaW: number, areaH: number) {
   const baseX = areaW * 0.5;
   const baseY = areaH * 0.68;
 
-  // ✅ 更窄
   const rX = areaW * 0.26;
   const rY = areaH * 0.08;
 
   const p = randomPointInEllipse(baseX, baseY, rX, rY);
 
-  // ✅ clamp 收紧
   return {
     x: clamp(p.x, areaW * 0.22, areaW * 0.78),
     y: clamp(p.y, areaH * 0.52, areaH * 0.80),
@@ -253,6 +251,7 @@ const DanmuItem = ({ wish, onComplete }: { wish: FlyingWish; onComplete: () => v
 const CakeGame: React.FC = () => {
   const { setPage, markCompleted } = useApp();
   const cakeAreaRef = useRef<HTMLDivElement>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const [state, dispatch] = useReducer(reducer, {
     step: 'decor',
@@ -277,11 +276,9 @@ const CakeGame: React.FC = () => {
     return [...state.decorations].sort((a, b) => (a.y - b.y) || (a.createdAt - b.createdAt));
   }, [state.decorations]);
 
-  // ✅ 插入蜡烛时弹幕：只在 addDecor(candle) 时触发
   const pushWishDanmu = () => {
     const id = Date.now() + Math.floor(Math.random() * 100000);
-    // 用“当前蜡烛数量”决定文案/轨道，更自然（第几根蜡烛对应第几条祝福）
-    const nextIndex = candleCount; // add 之前 candleCount 还是旧值，刚好当作下一根的 index
+    const nextIndex = candleCount; 
     const text = WISH_TEXTS[nextIndex % WISH_TEXTS.length];
     const track = nextIndex % 3;
 
@@ -289,6 +286,12 @@ const CakeGame: React.FC = () => {
   };
 
   const addDecor = (type: DecorType) => {
+    if (type === 'candle' && candleCount >= MAX_CANDLES) {
+        setToast("大萌永远18岁 🎂");
+        setTimeout(() => setToast(null), 2500);
+        return;
+    }
+
     const rect = cakeAreaRef.current?.getBoundingClientRect();
     const w = rect?.width ?? 320;
     const h = rect?.height ?? 180;
@@ -308,7 +311,6 @@ const CakeGame: React.FC = () => {
 
     dispatch({ type: 'ADD_DECOR', payload: newDecor });
 
-    // ✅ 只有插蜡烛触发祝福弹幕
     if (type === 'candle') {
       pushWishDanmu();
     }
@@ -323,7 +325,6 @@ const CakeGame: React.FC = () => {
     dispatch({ type: 'TO_LIGHTING' });
   };
 
-  // ✅ 一次性点亮所有蜡烛
   const lightAll = () => {
     dispatch({ type: 'LIGHT_ALL', payload: { candleCount } });
   };
@@ -337,7 +338,21 @@ const CakeGame: React.FC = () => {
   };
 
   return (
-    <ScreenWrapper className="px-5 py-6 overflow-hidden">
+    <ScreenWrapper className="px-5 py-6 overflow-hidden relative">
+      <AnimatePresence>
+        {toast && (
+            <motion.div
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                className="absolute top-24 left-1/2 -translate-x-1/2 z-[60] bg-gold-400/90 text-night-950 px-6 py-3 rounded-full shadow-[0_4px_20px_rgba(251,191,36,0.4)] backdrop-blur-md flex items-center gap-2 whitespace-nowrap"
+            >
+                <Ban size={18} className="text-red-900" />
+                <span className="font-serif font-bold text-sm">{toast}</span>
+            </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center mb-4 z-10 relative">
         <button
           onClick={() => setPage(Page.Hall)}
@@ -398,7 +413,7 @@ const CakeGame: React.FC = () => {
                       left: d.x,
                       top: d.y,
                       zIndex,
-                      translate: '-50% -100%', // ✅ 统一锚点：底部中心落点
+                      translate: '-50% -100%', 
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -426,7 +441,6 @@ const CakeGame: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ 弹幕：现在“插蜡烛时”触发，所以 decor / lighting 都可以显示（wishing 时遮罩就不需要了） */}
         <AnimatePresence>
           {state.step !== 'wishing' &&
             state.flyingWishes.map((wish) => (

@@ -1,20 +1,20 @@
 export enum Page {
   Loading = 'LOADING',
   Hall = 'HALL',
-  Radio = 'RADIO',
+  // Radio removed
   PostOffice = 'POST_OFFICE',
   Cake = 'CAKE',
-  StarBottle = 'STAR_BOTTLE', // New Page
+  StarBottle = 'STAR_BOTTLE',
   Finale = 'FINALE',
 }
 
 export interface AppState {
   page: Page;
   completed: {
-    radio: boolean;
+    // radio removed
     post: boolean;
     cake: boolean;
-    starBottle: boolean; // New State
+    starBottle: boolean;
   };
   mute: boolean;
   showIntroModal: boolean;

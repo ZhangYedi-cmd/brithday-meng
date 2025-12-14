@@ -9,9 +9,9 @@ import { Controls } from '../components/StarBottle/Controls';
 import { getRandomMessage } from '../data/starMessages';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 
-const TARGET_STARS = 15;
-const SHAKE_COOLDOWN_SEC = 10;
-const VACUUM_COOLDOWN_SEC = 8;
+const TARGET_STARS = 18;
+const SHAKE_COOLDOWN_SEC = 3;
+const VACUUM_COOLDOWN_SEC = 3;
 
 const StarBottleGame: React.FC = () => {
     const { setPage, markCompleted } = useApp();
@@ -141,7 +141,7 @@ const StarBottleGame: React.FC = () => {
     };
 
     const handleFinish = () => {
-        markCompleted('starBottle'); // We will add this key to types later
+        markCompleted('starBottle');
         setPage(Page.Hall);
     };
 

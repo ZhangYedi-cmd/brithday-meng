@@ -4,7 +4,7 @@ import { useApp } from '../App';
 import { Page } from '../types';
 import { USER_NAME } from '../constants';
 import { GlassCard, ScreenWrapper } from '../components/Shared';
-import { CheckCircle2, Music, Mail, Cake, Gift, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { CheckCircle2, Mail, Cake, Gift, Volume2, VolumeX, Sparkles } from 'lucide-react';
 
 // --- Stage Background Component ---
 const StageBackground = () => {
@@ -53,8 +53,8 @@ const StageBackground = () => {
 const Header = () => {
     const { completed, toggleMute, mute } = useApp();
     const count = Object.values(completed).filter(Boolean).length;
-    // Total games is now 4
-    const total = 4;
+    // Total games is now 3
+    const total = 3;
 
     return (
         <div className="flex items-center justify-between py-4 px-1 relative z-20 shrink-0">
@@ -80,16 +80,18 @@ const GiftCardItem = ({
     title, 
     icon: Icon, 
     completed, 
-    onClick 
+    onClick,
+    className
 }: { 
     title: string, 
     icon: any, 
     completed: boolean, 
-    onClick: () => void 
+    onClick: () => void,
+    className?: string
 }) => (
     <GlassCard 
         onClick={onClick}
-        className={`p-3 flex flex-col items-center justify-center gap-3 aspect-square cursor-pointer group transition-all duration-500 ${completed ? 'opacity-60 grayscale-[0.5]' : 'active:scale-95 hover:bg-white/10'}`}
+        className={`p-3 flex flex-col items-center justify-center gap-3 aspect-square cursor-pointer group transition-all duration-500 ${completed ? 'opacity-60 grayscale-[0.5]' : 'active:scale-95 hover:bg-white/10'} ${className || ''}`}
         highlight={!completed}
         style={{ borderColor: completed ? 'rgba(255,255,255,0.05)' : 'rgba(251, 191, 36, 0.3)' }}
     >
@@ -106,9 +108,9 @@ const GiftCardItem = ({
 
 const Hall: React.FC = () => {
   const { setPage, completed } = useApp();
-  // Ensure we check all 4 keys
+  // Ensure we check all 3 keys
   const progress = Object.values(completed).filter(Boolean).length;
-  const allCompleted = progress === 4;
+  const allCompleted = progress === 3;
 
   const marqueeText = `HAPPY BIRTHDAY ${USER_NAME}  ✦  WISHING YOU JOY  ✦  STAY GOLD  ✦  平安喜乐  ✦`;
 
@@ -170,14 +172,8 @@ const Hall: React.FC = () => {
                 />
             </motion.div>
 
-            {/* 2x2 Grid for 4 games */}
+            {/* Grid for 3 games */}
             <div className="grid grid-cols-2 gap-4 w-full px-2 shrink-0">
-                <GiftCardItem 
-                    title="情绪电台" 
-                    icon={Music}
-                    completed={completed.radio}
-                    onClick={() => setPage(Page.Radio)}
-                />
                 <GiftCardItem 
                     title="愿望邮局" 
                     icon={Mail}
@@ -190,12 +186,18 @@ const Hall: React.FC = () => {
                     completed={completed.starBottle}
                     onClick={() => setPage(Page.StarBottle)}
                 />
-                <GiftCardItem 
-                    title="蛋糕点灯" 
-                    icon={Cake}
-                    completed={completed.cake}
-                    onClick={() => setPage(Page.Cake)}
-                />
+                
+                {/* Center the 3rd item (Cake) */}
+                <div className="col-span-2 flex justify-center">
+                    <div className="w-[calc(50%-0.5rem)] min-w-[150px]">
+                        <GiftCardItem 
+                            title="蛋糕点灯" 
+                            icon={Cake}
+                            completed={completed.cake}
+                            onClick={() => setPage(Page.Cake)}
+                        />
+                    </div>
+                </div>
             </div>
             
             {!allCompleted && (
