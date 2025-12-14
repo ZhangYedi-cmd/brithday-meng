@@ -1,0 +1,520 @@
+import React, { useMemo, useRef, useReducer } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useApp } from '../App';
+import { Page, Decoration } from '../types';
+import { ScreenWrapper, Button, cn } from '../components/Shared';
+import { ArrowLeft, Flame, Sparkles } from 'lucide-react';
+
+// -----------------------------
+// Assets
+// -----------------------------
+const ASSETS = {
+  CAKE: 'https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/cake_plain_wide.svg',
+  CANDLE_BODY: 'https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/candle_body.svg',
+  FLAME: 'https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/flame.svg',
+  STRAWBERRY: 'https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/strawberry.svg',
+  COOKIE_STAR: 'https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/cookie_star.svg',
+};
+
+const DEBUG_ANCHOR = false;
+
+// -----------------------------
+// Types
+// -----------------------------
+type Step = 'decor' | 'lighting' | 'wishing';
+type DecorType = 'candle' | 'strawberry' | 'cookie';
+
+type Decor = Decoration & {
+  type: DecorType;
+  createdAt: number;
+};
+
+interface FlyingWish {
+  id: number;
+  text: string;
+  track: number; // 0..2
+}
+
+type State = {
+  step: Step;
+  decorations: Decor[];
+  litCount: number;
+  flyingWishes: FlyingWish[];
+};
+
+type Action =
+  | { type: 'ADD_DECOR'; payload: Decor }
+  | { type: 'REMOVE_DECOR'; payload: { id: number } }
+  | { type: 'TO_LIGHTING' }
+  | { type: 'LIGHT_ALL'; payload: { candleCount: number } }
+  | { type: 'TO_WISHING' }
+  | { type: 'RESET_LIGHTING' }
+  | { type: 'DANMU_ADD'; payload: FlyingWish }
+  | { type: 'DANMU_REMOVE'; payload: { id: number } };
+
+// -----------------------------
+// Copy: Wishes
+// -----------------------------
+const WISH_TEXTS = [
+  '谢谢你一直认真生活',
+  '你温柔，也有力量',
+  '愿你这一岁，自由且丰盛',
+  '所有的美好都与你环环相扣',
+  '做自己的光，不需要太亮',
+  '岁岁常欢愉，年年皆胜意',
+];
+
+// -----------------------------
+// Decor Catalog
+// -----------------------------
+const DECOR_CATALOG: Record<
+  DecorType,
+  { label: string; icon: string; buttonScale: number; render: (lit: boolean) => React.ReactNode }
+> = {
+  candle: {
+    label: '蜡烛',
+    icon: ASSETS.CANDLE_BODY,
+    buttonScale: 0.8,
+    render: (lit) => <Candle lit={lit} />,
+  },
+  strawberry: {
+    label: '草莓',
+    icon: ASSETS.STRAWBERRY,
+    buttonScale: 1.2,
+    render: () => (
+      <div className="relative w-10 h-10 pointer-events-none">
+        <img
+          src={ASSETS.STRAWBERRY}
+          alt="Strawberry"
+          className="absolute inset-0 w-full h-full object-contain object-bottom drop-shadow-md filter brightness-105"
+          draggable={false}
+        />
+      </div>
+    ),
+  },
+  cookie: {
+    label: '星星饼干',
+    icon: ASSETS.COOKIE_STAR,
+    buttonScale: 1.2,
+    render: () => (
+      <div className="relative w-9 h-9 pointer-events-none">
+        <img
+          src={ASSETS.COOKIE_STAR}
+          alt="Cookie"
+          className="absolute inset-0 w-full h-full object-contain object-bottom drop-shadow-md"
+          draggable={false}
+        />
+      </div>
+    ),
+  },
+};
+
+// -----------------------------
+// Reducer
+// -----------------------------
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'ADD_DECOR':
+      return { ...state, decorations: [...state.decorations, action.payload] };
+
+    case 'REMOVE_DECOR':
+      if (state.step !== 'decor') return state;
+      return { ...state, decorations: state.decorations.filter((d) => d.id !== action.payload.id) };
+
+    case 'TO_LIGHTING':
+      return { ...state, step: 'lighting' };
+
+    case 'RESET_LIGHTING':
+      return { ...state, litCount: 0 };
+
+    case 'LIGHT_ALL':
+      if (state.step !== 'lighting') return state;
+      return { ...state, litCount: action.payload.candleCount };
+
+    case 'DANMU_ADD':
+      return { ...state, flyingWishes: [...state.flyingWishes, action.payload] };
+
+    case 'DANMU_REMOVE':
+      return { ...state, flyingWishes: state.flyingWishes.filter((w) => w.id !== action.payload.id) };
+
+    case 'TO_WISHING':
+      return { ...state, step: 'wishing' };
+
+    default:
+      return state;
+  }
+}
+
+// -----------------------------
+// Placement engine (更窄范围)
+// 坐标含义：永远是“底部中心落点”
+// -----------------------------
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function randomPointInEllipse(cx: number, cy: number, rX: number, rY: number) {
+  const angle = Math.random() * Math.PI * 2;
+  const rr = Math.sqrt(Math.random());
+  return {
+    x: cx + rr * rX * Math.cos(angle),
+    y: cy + rr * rY * Math.sin(angle),
+  };
+}
+
+function computePlacement(areaW: number, areaH: number) {
+  const baseX = areaW * 0.5;
+  const baseY = areaH * 0.68;
+
+  // ✅ 更窄
+  const rX = areaW * 0.26;
+  const rY = areaH * 0.08;
+
+  const p = randomPointInEllipse(baseX, baseY, rX, rY);
+
+  // ✅ clamp 收紧
+  return {
+    x: clamp(p.x, areaW * 0.22, areaW * 0.78),
+    y: clamp(p.y, areaH * 0.52, areaH * 0.80),
+  };
+}
+
+// -----------------------------
+// Candle (visual)
+// -----------------------------
+const Candle: React.FC<{ lit: boolean }> = ({ lit }) => {
+  const FLAME_WIDTH_PX = 32;
+  const FLAME_TOP_PX = 10;
+  const FLAME_Y_SHIFT_PX = -26;
+
+  return (
+    <div className="relative w-10 h-28 pointer-events-none">
+      <img
+        src={ASSETS.CANDLE_BODY}
+        alt="Candle"
+        className="absolute inset-0 w-full h-full object-contain object-bottom drop-shadow-xl"
+        draggable={false}
+      />
+
+      <AnimatePresence>
+        {lit && (
+          <motion.div
+            key="flame"
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: [1, 1.06, 0.98, 1] }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute z-40 pointer-events-none origin-bottom"
+            style={{
+              left: '50%',
+              top: FLAME_TOP_PX,
+              width: FLAME_WIDTH_PX,
+              transform: `translate(-50%, ${FLAME_Y_SHIFT_PX}px)`,
+            }}
+          >
+            <img
+              src={ASSETS.FLAME}
+              alt="Flame"
+              className="w-full h-full drop-shadow-[0_0_12px_rgba(251,191,36,0.9)]"
+              draggable={false}
+            />
+            <div className="absolute inset-0 top-1/4 bg-gold-400/50 blur-xl rounded-full animate-pulse" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// -----------------------------
+// Danmu
+// -----------------------------
+const DanmuItem = ({ wish, onComplete }: { wish: FlyingWish; onComplete: () => void }) => {
+  const topPercent = 10 + wish.track * 15;
+  return (
+    <motion.div
+      initial={{ x: '120%' }}
+      animate={{ x: '-150%' }}
+      transition={{ duration: 5, ease: 'linear' }}
+      onAnimationComplete={onComplete}
+      className="absolute left-0 w-full pointer-events-none z-50 whitespace-nowrap"
+      style={{ top: `${topPercent}%` }}
+    >
+      <div className="inline-block bg-black/40 backdrop-blur-md px-5 py-2 rounded-full border border-gold-400/20 text-gold-100 font-serif text-lg shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
+        {wish.text}
+      </div>
+    </motion.div>
+  );
+};
+
+// -----------------------------
+// Main
+// -----------------------------
+const CakeGame: React.FC = () => {
+  const { setPage, markCompleted } = useApp();
+  const cakeAreaRef = useRef<HTMLDivElement>(null);
+
+  const [state, dispatch] = useReducer(reducer, {
+    step: 'decor',
+    decorations: [],
+    litCount: 0,
+    flyingWishes: [],
+  });
+
+  const candleDecorations = useMemo(
+    () => state.decorations.filter((d) => d.type === 'candle'),
+    [state.decorations]
+  );
+  const candleCount = candleDecorations.length;
+
+  const candleIndexMap = useMemo(() => {
+    const m = new Map<number, number>();
+    candleDecorations.forEach((d, idx) => m.set(d.id, idx));
+    return m;
+  }, [candleDecorations]);
+
+  const sortedDecorations = useMemo(() => {
+    return [...state.decorations].sort((a, b) => (a.y - b.y) || (a.createdAt - b.createdAt));
+  }, [state.decorations]);
+
+  // ✅ 插入蜡烛时弹幕：只在 addDecor(candle) 时触发
+  const pushWishDanmu = () => {
+    const id = Date.now() + Math.floor(Math.random() * 100000);
+    // 用“当前蜡烛数量”决定文案/轨道，更自然（第几根蜡烛对应第几条祝福）
+    const nextIndex = candleCount; // add 之前 candleCount 还是旧值，刚好当作下一根的 index
+    const text = WISH_TEXTS[nextIndex % WISH_TEXTS.length];
+    const track = nextIndex % 3;
+
+    dispatch({ type: 'DANMU_ADD', payload: { id, text, track } });
+  };
+
+  const addDecor = (type: DecorType) => {
+    const rect = cakeAreaRef.current?.getBoundingClientRect();
+    const w = rect?.width ?? 320;
+    const h = rect?.height ?? 180;
+
+    const { x, y } = computePlacement(w, h);
+
+    const now = Date.now();
+    const id = now + Math.floor(Math.random() * 100000);
+
+    const newDecor: Decor = {
+      id,
+      type,
+      x,
+      y,
+      createdAt: now,
+    };
+
+    dispatch({ type: 'ADD_DECOR', payload: newDecor });
+
+    // ✅ 只有插蜡烛触发祝福弹幕
+    if (type === 'candle') {
+      pushWishDanmu();
+    }
+  };
+
+  const removeDecor = (id: number) => {
+    dispatch({ type: 'REMOVE_DECOR', payload: { id } });
+  };
+
+  const toLighting = () => {
+    dispatch({ type: 'RESET_LIGHTING' });
+    dispatch({ type: 'TO_LIGHTING' });
+  };
+
+  // ✅ 一次性点亮所有蜡烛
+  const lightAll = () => {
+    dispatch({ type: 'LIGHT_ALL', payload: { candleCount } });
+  };
+
+  const blowCandles = () => {
+    dispatch({ type: 'TO_WISHING' });
+    setTimeout(() => {
+      markCompleted('cake');
+      setPage(Page.Hall);
+    }, 3500);
+  };
+
+  return (
+    <ScreenWrapper className="px-5 py-6 overflow-hidden">
+      <div className="flex items-center mb-4 z-10 relative">
+        <button
+          onClick={() => setPage(Page.Hall)}
+          className="p-2 -ml-2 text-white/50 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="ml-4 text-xl font-serif text-white">
+          {state.step === 'decor'
+            ? '让我们来DIV一个蛋糕吧～'
+            : state.step === 'lighting'
+              ? '点亮生日蜡烛'
+              : '许个愿吧'}
+        </h2>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center relative min-h-[300px] select-none mt-12">
+        <div className="relative w-80 h-auto flex flex-col items-center justify-end">
+          <motion.img
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            src={ASSETS.CAKE}
+            alt="Birthday Cake"
+            className="w-full relative z-10 drop-shadow-2xl"
+            draggable={false}
+          />
+
+          <div ref={cakeAreaRef} className="absolute top-[15%] left-0 w-full h-[60%] z-20">
+            {state.step === 'decor' && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[60%] bg-white/5 rounded-[50%] opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center border border-white/10">
+                <span className="text-white/40 text-[10px] font-medium tracking-widest bg-black/20 px-2 rounded-full backdrop-blur-sm">
+                  点击按钮放置装饰
+                </span>
+              </div>
+            )}
+
+            <AnimatePresence>
+              {sortedDecorations.map((d) => {
+                const candleIndex = d.type === 'candle' ? (candleIndexMap.get(d.id) ?? -1) : -1;
+                const isLit =
+                  d.type === 'candle' &&
+                  state.step !== 'decor' &&
+                  candleIndex >= 0 &&
+                  candleIndex < state.litCount;
+
+                const zIndex = Math.floor(d.y) + 30;
+
+                return (
+                  <motion.div
+                    key={d.id}
+                    layoutId={`decor-${d.id}`}
+                    initial={{ opacity: 0, scale: 0.6, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    className="absolute"
+                    style={{
+                      left: d.x,
+                      top: d.y,
+                      zIndex,
+                      translate: '-50% -100%', // ✅ 统一锚点：底部中心落点
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeDecor(d.id);
+                    }}
+                  >
+                    {DEBUG_ANCHOR && (
+                      <div className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500 z-[999]" />
+                    )}
+
+                    <motion.div
+                      className={cn(
+                        'cursor-pointer hover:brightness-110 transition-all',
+                        state.step !== 'decor' ? 'cursor-default' : ''
+                      )}
+                      whileHover={state.step === 'decor' ? { scale: 1.08 } : undefined}
+                      whileTap={state.step === 'decor' ? { scale: 0.92 } : undefined}
+                    >
+                      {DECOR_CATALOG[d.type].render(!!isLit)}
+                    </motion.div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* ✅ 弹幕：现在“插蜡烛时”触发，所以 decor / lighting 都可以显示（wishing 时遮罩就不需要了） */}
+        <AnimatePresence>
+          {state.step !== 'wishing' &&
+            state.flyingWishes.map((wish) => (
+              <DanmuItem
+                key={wish.id}
+                wish={wish}
+                onComplete={() => dispatch({ type: 'DANMU_REMOVE', payload: { id: wish.id } })}
+              />
+            ))}
+        </AnimatePresence>
+
+        {state.step === 'wishing' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-50 rounded-xl"
+          >
+            <Sparkles className="w-16 h-16 text-gold-400 mb-6 animate-pulse" />
+            <p className="text-gold-100 text-2xl font-serif mb-2">生日愿望已许下</p>
+            <p className="text-white/50 text-sm">愿你所得皆所期</p>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Control Panel */}
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl relative z-30">
+        {state.step === 'decor' ? (
+          <>
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {(Object.keys(DECOR_CATALOG) as DecorType[]).map((type) => {
+                const item = DECOR_CATALOG[type];
+                return (
+                  <button
+                    key={type}
+                    onClick={() => addDecor(type)}
+                    className="flex flex-col items-center gap-2 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all active:scale-95 border border-white/5 group"
+                  >
+                    <div className="h-8 flex items-center justify-center">
+                      <img
+                        src={item.icon}
+                        alt={item.label}
+                        className="h-full w-auto object-contain drop-shadow-sm group-hover:scale-110 transition-transform"
+                        style={{ transform: `scale(${item.buttonScale})` }}
+                        draggable={false}
+                      />
+                    </div>
+                    <span className="text-[10px] text-white/60">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Button
+              fullWidth
+              disabled={candleCount < 1}
+              onClick={toLighting}
+              className={cn(candleCount < 1 ? 'opacity-50' : '')}
+            >
+              {candleCount < 1 ? '请至少插 1 根蜡烛' : '插好了，去点亮'}
+            </Button>
+          </>
+        ) : state.step === 'lighting' ? (
+          <div className="flex flex-col gap-4">
+            {state.litCount < candleCount ? (
+              <Button fullWidth onClick={lightAll} className="text-lg py-4">
+                <Flame className="mr-2 fill-current" size={20} />
+                一键点亮全部蜡烛
+              </Button>
+            ) : (
+              <Button
+                fullWidth
+                onMouseDown={blowCandles}
+                onTouchStart={blowCandles}
+                className="bg-gradient-to-r from-gold-400 to-orange-400 text-night-950 font-bold text-lg py-4 shadow-[0_0_20px_rgba(251,191,36,0.4)] animate-pulse"
+              >
+                呼气～吹灭蜡烛 🌬️
+              </Button>
+            )}
+            <p className="text-center text-xs text-white/40">
+              {state.litCount < candleCount ? '准备好了吗？一口气点亮所有心愿' : '长按按钮许愿吹灭'}
+            </p>
+          </div>
+        ) : (
+          <div className="h-16" />
+        )}
+      </div>
+    </ScreenWrapper>
+  );
+};
+
+export default CakeGame;
