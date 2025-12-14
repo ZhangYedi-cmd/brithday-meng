@@ -17,6 +17,29 @@ import {
     Mail
 } from 'lucide-react';
 
+const Stamp = () => (
+  <div className="absolute top-4 right-4 w-16 h-20 bg-red-900/5 border-2 border-red-900/10 rounded flex items-center justify-center rotate-3 overflow-hidden select-none pointer-events-none">
+     <div className="absolute inset-0 border-[3px] border-dashed border-red-900/20 m-1 rounded-sm" />
+     <Heart className="text-red-900/20" size={24} />
+  </div>
+);
+
+const Postmark = () => {
+    const year = new Date().getFullYear();
+    return (
+        <div className="absolute top-6 right-12 w-20 h-20 border-2 border-stone-800/20 rounded-full flex items-center justify-center -rotate-12 opacity-50 mix-blend-multiply select-none pointer-events-none">
+            <div className="text-[9px] font-mono text-stone-800 text-center leading-tight">
+                POST OFFICE<br/>
+                {year}<br/>
+                DREAM
+            </div>
+            <div className="absolute inset-0 border border-stone-800/10 rounded-full m-1" />
+            <div className="absolute top-1/2 -left-4 w-28 h-[1px] bg-stone-800/20" />
+            <div className="absolute top-1/2 -left-4 w-28 h-[1px] bg-stone-800/20 rotate-6" />
+        </div>
+    );
+};
+
 const PostOfficeGame: React.FC = () => {
     const { setPage, markCompleted } = useApp();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -166,44 +189,65 @@ const PostOfficeGame: React.FC = () => {
                         animate={{ opacity: 1 }}
                     >
                          {/* 使用 popLayout 模式让卡片切换无缝衔接，消除闪烁 */}
-                         <div className="relative w-full min-h-[320px] flex items-center">
+                         <div className="relative w-full min-h-[420px] md:min-h-[480px] flex items-center">
                              <AnimatePresence mode="popLayout" initial={false}>
                                 <motion.div
                                     key={currentReadingIndex}
-                                    className="w-full absolute inset-0" // 绝对定位让它们重叠在一起进行动画
-                                    initial={{ opacity: 0, x: 100, scale: 0.9, rotate: 2 }}
-                                    animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
-                                    exit={{ opacity: 0, x: -100, scale: 0.9, rotate: -2 }}
+                                    className="w-full h-full absolute inset-0 perspective-1000" // 绝对定位让它们重叠在一起进行动画
+                                    initial={{ opacity: 0, x: 100, rotate: 2 }}
+                                    animate={{ opacity: 1, x: 0, rotate: 0 }}
+                                    exit={{ opacity: 0, x: -100, rotate: -2 }}
                                     transition={{ 
                                         type: "spring", 
-                                        stiffness: 300, 
-                                        damping: 30,
-                                        opacity: { duration: 0.2 }
+                                        stiffness: 260, 
+                                        damping: 20
                                     }}
                                 >
-                                    <GlassCard className="p-8 h-full flex flex-col relative bg-[#fffdf5] text-night-900 shadow-2xl">
-                                        <div className="absolute top-6 left-6 border-2 border-red-800 text-red-800 rounded px-2 py-1 text-xs font-bold rotate-[-12deg] opacity-70">
-                                            已回信
+                                    <div className="relative h-full w-full bg-[#fdfbf7] rounded-xl overflow-hidden shadow-2xl border border-stone-200">
+                                        {/* Paper Texture Effect */}
+                                        <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none" />
+                                        
+                                        {/* Decorative frames */}
+                                        <div className="absolute inset-2 border border-stone-800/5 rounded-lg pointer-events-none" />
+                                        <div className="absolute inset-3 border border-stone-800/5 rounded-lg pointer-events-none" />
+
+                                        {/* Header Elements */}
+                                        <div className="absolute top-8 left-8">
+                                            <span className="text-[10px] font-serif tracking-[0.2em] text-stone-400 uppercase block mb-2">To You</span>
+                                            <span className="text-lg font-serif text-stone-800 border-b border-stone-300 pb-1 pr-4 inline-block">
+                                                RE: {replies[currentReadingIndex].title}
+                                            </span>
                                         </div>
-                                        <div className="absolute top-6 right-6 text-xs text-stone-400">
-                                            RE: {replies[currentReadingIndex].title}
+
+                                        <Stamp />
+                                        <Postmark />
+
+                                        {/* Message Body */}
+                                        <div className="absolute inset-0 flex items-center justify-center p-10 mt-6">
+                                            <div className="relative">
+                                                <Sparkles className="absolute -top-6 -left-4 text-gold-400/40 w-6 h-6 animate-pulse" />
+                                                <p className="text-xl md:text-2xl font-serif text-stone-800 leading-loose text-center whitespace-pre-line drop-shadow-sm select-none">
+                                                    “ {replies[currentReadingIndex].msg} ”
+                                                </p>
+                                                <Sparkles className="absolute -bottom-4 -right-2 text-gold-400/40 w-5 h-5 animate-pulse delay-700" />
+                                            </div>
                                         </div>
                                         
-                                        <div className="flex-1 flex items-center justify-center py-8">
-                                            <p className="text-xl font-serif text-stone-800 leading-relaxed text-center whitespace-pre-line">
-                                                {replies[currentReadingIndex].msg}
-                                            </p>
-                                        </div>
-                                        
-                                        <div className="flex justify-center pt-6 border-t border-stone-200">
-                                             <button 
+                                        {/* Footer Control */}
+                                        <div className="absolute bottom-0 left-0 w-full p-6 pb-8 flex justify-center bg-gradient-to-t from-[#fdfbf7] via-[#fdfbf7]/90 to-transparent">
+                                            <button 
                                                 onClick={handleNextCard}
-                                                className="text-stone-500 hover:text-stone-800 text-sm flex items-center gap-1 font-medium transition-colors p-2"
-                                             >
-                                                下一张 <ArrowLeft size={14} className="rotate-180"/>
-                                             </button>
+                                                className="group/btn flex flex-col items-center gap-2 transition-all cursor-pointer"
+                                            >
+                                                <span className="text-[10px] tracking-[0.2em] text-stone-400 uppercase group-hover/btn:text-stone-600 transition-colors">
+                                                    {currentReadingIndex < 2 ? 'Next Letter' : 'Finish'}
+                                                </span>
+                                                <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-500 group-hover/btn:bg-stone-800 group-hover/btn:text-stone-100 group-hover/btn:scale-110 group-active/btn:scale-95 transition-all shadow-sm">
+                                                    <ArrowLeft size={20} className="rotate-180" />
+                                                </div>
+                                            </button>
                                         </div>
-                                    </GlassCard>
+                                    </div>
                                 </motion.div>
                              </AnimatePresence>
                          </div>
