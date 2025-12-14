@@ -227,7 +227,7 @@ const Candle: React.FC<{ lit: boolean }> = ({ lit }) => {
 // -----------------------------
 // Danmu
 // -----------------------------
-const DanmuItem = ({ wish, onComplete }: { wish: FlyingWish; onComplete: () => void }) => {
+const DanmuItem: React.FC<{ wish: FlyingWish; onComplete: () => void }> = ({ wish, onComplete }) => {
   const topPercent = 10 + wish.track * 15;
   return (
     <motion.div

@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../App';
 import { Page } from '../types';
 import { USER_NAME } from '../constants';
 import { GlassCard, ScreenWrapper } from '../components/Shared';
-import { FallingEmojis } from '../components/FallingEmojis';
 import { CheckCircle2, Mail, Cake, Gift, Volume2, VolumeX, Sparkles } from 'lucide-react';
-
-// Module-level variable to track if the welcome animation has played in this session.
-// This ensures it only happens once when the app is loaded, not every time we return to the Hall.
-let hasPlayedWelcomeAnimation = false;
 
 // --- Stage Background Component ---
 const StageBackground = () => {
@@ -116,22 +111,11 @@ const Hall: React.FC = () => {
   // Ensure we check all 3 keys
   const progress = Object.values(completed).filter(Boolean).length;
   const allCompleted = progress === 3;
-  
-  // Initialize state based on whether we've played the animation globally
-  const [showEmojiRain] = useState(!hasPlayedWelcomeAnimation);
-
-  useEffect(() => {
-      // Mark as played so it doesn't show again when navigating back
-      hasPlayedWelcomeAnimation = true;
-  }, []);
 
   const marqueeText = `HAPPY BIRTHDAY ${USER_NAME}  ✦  WISHING YOU JOY  ✦  STAY GOLD  ✦  平安喜乐  ✦`;
 
   return (
     <ScreenWrapper className="h-full relative overflow-hidden">
-      {/* Show falling emojis only on first visit */}
-      {showEmojiRain && <FallingEmojis />}
-
       {/* Background stays fixed and full screen */}
       <StageBackground />
       
