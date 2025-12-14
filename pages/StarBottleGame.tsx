@@ -7,7 +7,7 @@ import { CanvasScene } from '../components/StarBottle/CanvasScene';
 import { BlessingPanel } from '../components/StarBottle/BlessingPanel';
 import { Controls } from '../components/StarBottle/Controls';
 import { getRandomMessage } from '../data/starMessages';
-import { ArrowLeft, Sparkles, Star } from 'lucide-react';
+import { ArrowLeft, Sparkles, Star, Ticket } from 'lucide-react';
 
 const TARGET_STARS = 18;
 const SHAKE_COOLDOWN_SEC = 3;
@@ -23,6 +23,10 @@ const StarBottleGame: React.FC = () => {
     const [gameState, setGameState] = useState<'intro' | 'playing' | 'result'>('intro');
     const [progress, setProgress] = useState(0);
     const [currentMessage, setCurrentMessage] = useState('');
+    
+    // Easter Egg State
+    const [showLuckyEgg, setShowLuckyEgg] = useState(false);
+    const eggTriggeredRef = useRef(false);
     
     // Skills State
     const [canShake, setCanShake] = useState(true);
@@ -66,8 +70,15 @@ const StarBottleGame: React.FC = () => {
         };
     }, []);
 
-    // Win Condition
+    // Win Condition & Easter Egg Logic
     useEffect(() => {
+        // Trigger Easter Egg at 10 stars
+        if (progress >= 10 && !eggTriggeredRef.current) {
+            eggTriggeredRef.current = true;
+            setShowLuckyEgg(true);
+        }
+
+        // Win Condition
         if (progress >= TARGET_STARS) {
             setTimeout(() => {
                 setGameState('result');
@@ -92,7 +103,7 @@ const StarBottleGame: React.FC = () => {
 
     // Interaction Handlers
     const handleCanvasClick = (e: React.MouseEvent | React.TouchEvent) => {
-        if (gameState !== 'playing') return;
+        if (gameState !== 'playing' || showLuckyEgg) return; // Prevent clicking when modal is open
         if (progress >= TARGET_STARS) return;
         
         // Normalize coordinates
@@ -113,21 +124,18 @@ const StarBottleGame: React.FC = () => {
     };
 
     const handleShake = () => {
-        if (!canShake) return;
+        if (!canShake || showLuckyEgg) return;
         sceneRef.current?.triggerShake();
         setCanShake(false);
         setShakeCD(SHAKE_COOLDOWN_SEC);
     };
 
     const handleVacuumStart = () => {
-        if (!canVacuum || progress >= TARGET_STARS) return;
+        if (!canVacuum || progress >= TARGET_STARS || showLuckyEgg) return;
         setIsVacuuming(true);
         
         // Loop for vacuum physics
         const interval = setInterval(() => {
-            // Find touch point (simplified: center of screen for ease, or track touch)
-            // For better UX on mobile without complex touch tracking in React state:
-            // Pull towards center of screen where thumb likely is, or bottle mouth
             if (sceneRef.current) {
                 sceneRef.current.magnetPull(sceneRef.current.width / 2, sceneRef.current.height / 2);
             }
@@ -242,9 +250,53 @@ const StarBottleGame: React.FC = () => {
                 />
             </div>
 
+            {/* Easter Egg Modal */}
+            <AnimatePresence>
+                {showLuckyEgg && (
+                    <ModalWrapper onClose={() => setShowLuckyEgg(false)}>
+                        <div className="text-center relative">
+                             {/* Confetti effect (simple visual) */}
+                             <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-5xl animate-bounce">
+                                🎉
+                             </div>
+                             
+                             <h3 className="text-xl font-serif text-gold-300 mb-6 font-bold mt-6 leading-relaxed">
+                                恭喜你收集到了<br/>一颗「超级幸运星」！
+                             </h3>
+                            
+                             {/* Ticket/Coupon Visual */}
+                             <div className="bg-gradient-to-br from-white/10 to-white/5 rounded-xl p-6 border border-dashed border-gold-400/40 mb-6 relative overflow-hidden shadow-lg group">
+                                  {/* Cutouts */}
+                                  <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#0f172a] rounded-full border border-gold-400/20" />
+                                  <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#0f172a] rounded-full border border-gold-400/20" />
+                                  
+                                  <div className="absolute top-2 right-2 opacity-10">
+                                     <Ticket size={64} className="text-gold-100" />
+                                  </div>
+                                  
+                                  <p className="text-gold-200/60 text-[10px] mb-3 tracking-[0.3em] uppercase">Special Coupon</p>
+                                  <p className="text-white text-base font-serif mb-2 opacity-90">凭此凭证，可兑换：</p>
+                                  <div className="py-2 border-t border-b border-white/10 my-3">
+                                      <p className="text-gold-300 text-xl font-bold tracking-wide">奶茶啵啵一杯 🧋</p>
+                                  </div>
+                                  <p className="text-white/40 text-xs font-light">（少糖也很甜那种）</p>
+                             </div>
+    
+                             <p className="text-gold-200/50 text-xs mb-6 font-mono bg-white/5 inline-block px-3 py-1 rounded-full">
+                                📅 使用期限：想喝的时候就算数
+                             </p>
+    
+                             <Button fullWidth onClick={() => setShowLuckyEgg(false)}>
+                                收下这张兑换券
+                             </Button>
+                        </div>
+                    </ModalWrapper>
+                )}
+            </AnimatePresence>
+
             {/* Result Modal */}
             <AnimatePresence>
-                {gameState === 'result' && (
+                {gameState === 'result' && !showLuckyEgg && (
                     <ModalWrapper>
                         <div className="text-center">
                             <div className="w-20 h-20 mx-auto bg-gold-400/20 rounded-full flex items-center justify-center mb-6 animate-pulse">

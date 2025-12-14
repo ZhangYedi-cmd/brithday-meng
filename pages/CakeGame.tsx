@@ -57,14 +57,34 @@ type Action =
 // -----------------------------
 // Copy: Wishes
 // -----------------------------
-const WISH_TEXTS = [
-  '谢谢你一直认真生活',
-  '你温柔，也有力量',
-  '愿你这一岁，自由且丰盛',
-  '所有的美好都与你环环相扣',
-  '做自己的光，不需要太亮',
-  '岁岁常欢愉，年年皆胜意',
+
+// candles.ts
+// 点蜡烛阶段：生活化文案（18句）
+
+export const WISH_TEXTS: string[] = [
+  "这一根，给温温柔柔、慢慢生活的大萌 🕯️",
+  "这一根，给今天也在认真过日子的萌儿",
+  "这一根，给不慌不忙、心里很稳的你",
+  "这一根，给穿着 Lululemon、踩着小拖鞋、很自在的阿萌",
+  "这一根，给捧着奶茶啵啵、慢慢喝的那个瞬间",
+  "这一根，给冰美式第一口下去、清醒又清爽的你",
+  "这一根，给嘴上不说、心里却很明白的那份成熟",
+  "这一根，给看起来松弛、其实很有力量的温柔",
+  "这一根，给灵灵的抹茶小仙女 🧚‍♀️",
+  "这一根，给偶尔犯懒、但从不敷衍生活的你",
+  "这一根，给情绪来过、但依然向前走的那股韧劲",
+  "这一根，给精灵小蜜蜂一样忙碌又可爱的你 🐝",
+  "这一根，给懂得照顾别人、也开始照顾自己的大萌",
+  "这一根，给慢慢长大、却没有丢掉童心的你",
+  "这一根，给不张扬、却很容易被记住的那种存在感",
+  "这一根，给今天也值得被奖励一下的你",
+  "这一根，给认真生活本身这件事",
+  "这一根，偷偷给嘴上嫌弃、心里很软的油炸小肥肠 😋",
 ];
+
+// 可选：最后一根蜡烛固定收束（如果你想“最后一句”更有仪式感）
+export const FINAL_CANDLE_MESSAGE =
+  "最后这一根，给今天的你：愿你一直被温柔照亮 ✨";
 
 // -----------------------------
 // Decor Catalog
@@ -388,7 +408,7 @@ const CakeGame: React.FC = () => {
                     </div>
                     <h2 className="text-2xl font-serif text-white mb-6 tracking-wide">亲手做一个独一无二的蛋糕</h2>
                     <div className="space-y-4 text-gold-100/60 font-light text-sm tracking-widest leading-loose">
-                        <p>插上蜡烛，许个愿</p>
+                        <p>插满 {MAX_CANDLES} 根蜡烛，许个愿</p>
                         <p>呼气吹灭～ 🕯️</p>
                     </div>
                 </motion.div>
@@ -405,7 +425,7 @@ const CakeGame: React.FC = () => {
         </button>
         <h2 className="ml-4 text-xl font-serif text-white">
           {state.step === 'intro' || state.step === 'decor'
-            ? '让我们来DIY一个蛋糕吧～'
+            ? `让我们来DIY一个蛋糕吧 (需插满${MAX_CANDLES}根)`
             : state.step === 'lighting'
               ? '点亮生日蜡烛'
               : '许个愿吧'}
@@ -542,11 +562,13 @@ const CakeGame: React.FC = () => {
 
             <Button
               fullWidth
-              disabled={candleCount < 1}
+              disabled={candleCount < MAX_CANDLES}
               onClick={toLighting}
-              className={cn(candleCount < 1 ? 'opacity-50' : '')}
+              className={cn(candleCount < MAX_CANDLES ? 'opacity-50' : '')}
             >
-              {candleCount < 1 ? '请至少插 1 根蜡烛' : '插好了，去点亮'}
+              {candleCount < MAX_CANDLES 
+                ? `请插满 ${MAX_CANDLES} 根蜡烛 (${candleCount}/${MAX_CANDLES})` 
+                : '插好了，去点亮'}
             </Button>
           </>
         ) : state.step === 'lighting' ? (

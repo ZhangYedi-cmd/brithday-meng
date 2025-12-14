@@ -48,10 +48,6 @@ const IntroModal: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           <p>我给你准备了三份小礼物。</p>
           <p>今天你只负责开心。</p>
         </div>
-        {/* Simple Loading Indicator for the auto-dismiss timer */}
-        <div className="flex justify-center mt-8 opacity-50">
-            <div className="w-5 h-5 border-2 border-gold-400/30 border-t-gold-400 rounded-full animate-spin" />
-        </div>
       </div>
     </ModalWrapper>
   );

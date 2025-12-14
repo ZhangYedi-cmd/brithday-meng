@@ -27,8 +27,7 @@ export const RADIO_QUOTES = [
   "生日快乐，愿你眼里的星星一直亮着。",
   "慢慢走，别着急，沿途有风景，身后也有归处。",
   "你被很多温柔悄悄包围着，所以可以更安心地向前走。"
-]
-
+];
 export const ENVELOPES: EnvelopeCategory[] = [
   {
     id: 'mood',
@@ -119,7 +118,7 @@ export const ENVELOPES: EnvelopeCategory[] = [
 export const FINALE_MESSAGE = `愿你这一岁，心更松一点，笑更真一点，生活更顺心一点。
 你认真、善良，
 也在不知不觉中，长成了一个有自己光的人。
-这种光，不张扬，却很温柔，
+这种光，不张扬，却很温柔、很动人，
 愿大萌永远像兔兔一样可爱 🐰`;
 
 export const USER_NAME = "大萌";
