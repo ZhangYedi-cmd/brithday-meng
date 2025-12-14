@@ -30,7 +30,7 @@ const StageBackground = () => {
     };
 
     return (
-        <div className="absolute inset-0 pointer-events-none -z-1 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute inset-0 z-0" style={spotlightStyle} />
             <motion.div 
                 className="absolute inset-0 z-10"
@@ -113,118 +113,123 @@ const Hall: React.FC = () => {
   const marqueeText = `HAPPY BIRTHDAY ${USER_NAME}  ✦  WISHING YOU JOY  ✦  STAY GOLD  ✦  平安喜乐  ✦`;
 
   return (
-    <ScreenWrapper className="px-5 pt-4 pb-8 h-full relative overflow-y-auto overflow-x-hidden no-scrollbar">
+    <ScreenWrapper className="h-full relative overflow-hidden">
+      {/* Background stays fixed and full screen */}
       <StageBackground />
-      <Header />
       
-      <div className="flex-1 flex flex-col items-center justify-center py-6 relative z-10 w-full">
-        
-        <div className="w-full overflow-hidden mb-2 opacity-30 select-none pointer-events-none mix-blend-screen relative z-10 shrink-0">
-            <motion.div
-                className="flex whitespace-nowrap text-[10px] font-serif tracking-[0.4em] text-gold-100"
-                animate={{ x: ["0%", "-50%"] }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-            >
-                 <span className="mr-8">{marqueeText}</span>
-                 <span className="mr-8">{marqueeText}</span>
-                 <span className="mr-8">{marqueeText}</span>
-                 <span className="mr-8">{marqueeText}</span>
-            </motion.div>
-        </div>
-
-        <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 1 }}
-            className="text-center mb-6 relative z-20 shrink-0"
-        >
-             <h1 className="text-3xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-gold-100 via-gold-200 to-gold-400 drop-shadow-sm tracking-wide">
-                祝{USER_NAME}生日快乐
-             </h1>
-             <div className="flex items-center justify-center gap-3 mt-3 opacity-60">
-                 <div className="h-[1px] w-6 bg-gradient-to-r from-transparent to-gold-200" />
-                 <span className="text-[10px] tracking-[0.3em] text-gold-100 uppercase font-light">
-                    May you always be happy
-                 </span>
-                 <div className="h-[1px] w-6 bg-gradient-to-l from-transparent to-gold-200" />
-            </div>
-        </motion.div>
-
-        {/* Hero Cake Image - slightly smaller to fit 2 rows */}
-        <motion.div 
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-            className="flex justify-center mb-8 relative w-full group shrink-0"
-        >
-            <div className="absolute top-[50%] left-[55%] -translate-x-1/2 -translate-y-1/2 bg-gold-400/15 blur-[60px] w-48 h-48 rounded-full animate-pulse-slow mix-blend-screen pointer-events-none" />
+      {/* Scrollable Container covering the whole screen, sitting on top of background */}
+      <div className="absolute inset-0 z-10 overflow-y-auto overflow-x-hidden no-scrollbar px-5 pt-4 pb-24 flex flex-col">
+          <Header />
+          
+          <div className="flex-1 flex flex-col items-center justify-center py-6 relative w-full">
             
-            <img 
-                src="https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/1D216DAA-0A4D-4921-81D9-BC7BD7607C4D.png" 
-                alt="Birthday Cake" 
-                className="w-48 h-48 object-contain relative z-10 animate-float drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
-            />
-        </motion.div>
+            <div className="w-full overflow-hidden mb-2 opacity-30 select-none pointer-events-none mix-blend-screen relative z-10 shrink-0">
+                <motion.div
+                    className="flex whitespace-nowrap text-[10px] font-serif tracking-[0.4em] text-gold-100"
+                    animate={{ x: ["0%", "-50%"] }}
+                    transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                >
+                     <span className="mr-8">{marqueeText}</span>
+                     <span className="mr-8">{marqueeText}</span>
+                     <span className="mr-8">{marqueeText}</span>
+                     <span className="mr-8">{marqueeText}</span>
+                </motion.div>
+            </div>
 
-        {/* 2x2 Grid for 4 games */}
-        <div className="grid grid-cols-2 gap-4 w-full px-2 shrink-0">
-            <GiftCardItem 
-                title="情绪电台" 
-                icon={Music}
-                completed={completed.radio}
-                onClick={() => setPage(Page.Radio)}
-            />
-            <GiftCardItem 
-                title="愿望邮局" 
-                icon={Mail}
-                completed={completed.post}
-                onClick={() => setPage(Page.PostOffice)}
-            />
-            <GiftCardItem 
-                title="许愿星瓶" 
-                icon={Sparkles}
-                completed={completed.starBottle}
-                onClick={() => setPage(Page.StarBottle)}
-            />
-            <GiftCardItem 
-                title="蛋糕点灯" 
-                icon={Cake}
-                completed={completed.cake}
-                onClick={() => setPage(Page.Cake)}
-            />
-        </div>
-        
-        {!allCompleted && (
-             <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-gold-100/40 text-xs text-center mt-6 font-light tracking-[0.2em] shrink-0 pb-4"
-             >
-                {progress === 0 ? "✦ 点击图标开始拆礼物 ✦" : "✦ 还有惊喜等着你 ✦"}
-             </motion.p>
-        )}
-
-        {allCompleted ? (
-         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6 relative z-10 shrink-0 pb-4"
-         >
-             <GlassCard 
-                className="p-4 flex items-center justify-between cursor-pointer bg-gradient-to-r from-gold-400/20 via-gold-400/10 to-transparent border-gold-400/40 group shadow-[0_0_30px_rgba(251,191,36,0.15)]"
-                onClick={() => setPage(Page.Finale)}
-                highlight
-             >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gold-400/20 rounded-full text-gold-300 group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(251,191,36,0.3)]">
-                        <Gift size={20} />
-                    </div>
-                    <span className="font-serif text-gold-100 font-medium tracking-wide">领取最终礼物</span>
+            <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 1 }}
+                className="text-center mb-6 relative z-20 shrink-0"
+            >
+                 <h1 className="text-3xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-gold-100 via-gold-200 to-gold-400 drop-shadow-sm tracking-wide">
+                    祝{USER_NAME}生日快乐
+                 </h1>
+                 <div className="flex items-center justify-center gap-3 mt-3 opacity-60">
+                     <div className="h-[1px] w-6 bg-gradient-to-r from-transparent to-gold-200" />
+                     <span className="text-[10px] tracking-[0.3em] text-gold-100 uppercase font-light">
+                        May you always be happy
+                     </span>
+                     <div className="h-[1px] w-6 bg-gradient-to-l from-transparent to-gold-200" />
                 </div>
-                <span className="text-gold-300 group-hover:translate-x-1 transition-transform">→</span>
-             </GlassCard>
-         </motion.div>
-         ) : null}
+            </motion.div>
+
+            {/* Hero Cake Image */}
+            <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+                className="flex justify-center mb-8 relative w-full group shrink-0"
+            >
+                <div className="absolute top-[50%] left-[55%] -translate-x-1/2 -translate-y-1/2 bg-gold-400/15 blur-[60px] w-48 h-48 rounded-full animate-pulse-slow mix-blend-screen pointer-events-none" />
+                
+                <img 
+                    src="https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/1D216DAA-0A4D-4921-81D9-BC7BD7607C4D.png" 
+                    alt="Birthday Cake" 
+                    className="w-48 h-48 object-contain relative z-10 animate-float drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
+                />
+            </motion.div>
+
+            {/* 2x2 Grid for 4 games */}
+            <div className="grid grid-cols-2 gap-4 w-full px-2 shrink-0">
+                <GiftCardItem 
+                    title="情绪电台" 
+                    icon={Music}
+                    completed={completed.radio}
+                    onClick={() => setPage(Page.Radio)}
+                />
+                <GiftCardItem 
+                    title="愿望邮局" 
+                    icon={Mail}
+                    completed={completed.post}
+                    onClick={() => setPage(Page.PostOffice)}
+                />
+                <GiftCardItem 
+                    title="许愿星瓶" 
+                    icon={Sparkles}
+                    completed={completed.starBottle}
+                    onClick={() => setPage(Page.StarBottle)}
+                />
+                <GiftCardItem 
+                    title="蛋糕点灯" 
+                    icon={Cake}
+                    completed={completed.cake}
+                    onClick={() => setPage(Page.Cake)}
+                />
+            </div>
+            
+            {!allCompleted && (
+                 <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-gold-100/40 text-xs text-center mt-6 font-light tracking-[0.2em] shrink-0 pb-4"
+                 >
+                    {progress === 0 ? "✦ 点击图标开始拆礼物 ✦" : "✦ 还有惊喜等着你 ✦"}
+                 </motion.p>
+            )}
+
+            {allCompleted ? (
+             <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 relative z-10 shrink-0 w-full px-2"
+             >
+                 <GlassCard 
+                    className="p-4 flex items-center justify-between cursor-pointer bg-gradient-to-r from-gold-400/20 via-gold-400/10 to-transparent border-gold-400/40 group shadow-[0_0_30px_rgba(251,191,36,0.15)]"
+                    onClick={() => setPage(Page.Finale)}
+                    highlight
+                 >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gold-400/20 rounded-full text-gold-300 group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+                            <Gift size={20} />
+                        </div>
+                        <span className="font-serif text-gold-100 font-medium tracking-wide">领取最终礼物</span>
+                    </div>
+                    <span className="text-gold-300 group-hover:translate-x-1 transition-transform">→</span>
+                 </GlassCard>
+             </motion.div>
+             ) : null}
+          </div>
       </div>
     </ScreenWrapper>
   );
