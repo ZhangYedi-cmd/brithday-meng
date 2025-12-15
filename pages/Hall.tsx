@@ -161,20 +161,44 @@ const Hall: React.FC = () => {
                 </div>
             </motion.div>
 
-            {/* Hero Cake Image */}
+            {/* Hero Cake Image with Milk Tea Decorations */}
             <motion.div 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                className="flex justify-center mb-8 relative w-full group shrink-0"
+                className="flex justify-center items-center mb-8 relative w-full group shrink-0"
             >
-                <div className="absolute top-[50%] left-[55%] -translate-x-1/2 -translate-y-1/2 bg-gold-400/15 blur-[60px] w-48 h-48 rounded-full animate-pulse-slow mix-blend-screen pointer-events-none" />
-                
-                <img 
-                    src="https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/1D216DAA-0A4D-4921-81D9-BC7BD7607C4D.png" 
-                    alt="Birthday Cake" 
-                    className="w-48 h-48 object-contain relative z-10 animate-float drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
-                />
+                 <div className="relative w-80 h-52 flex items-center justify-center">
+                    {/* Left Milk Tea */}
+                    <motion.img 
+                        src="https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/milk_tea_cup.svg"
+                        alt="Milk Tea Left"
+                        className="w-16 h-16 object-contain absolute left-2 bottom-6 z-0 opacity-80 drop-shadow-lg"
+                        animate={{ rotate: [-5, 5] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+                    />
+
+                    {/* Right Milk Tea */}
+                    <motion.img 
+                        src="https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/milk_tea_cup.svg"
+                        alt="Milk Tea Right"
+                        className="w-16 h-16 object-contain absolute right-2 bottom-6 z-0 opacity-80 drop-shadow-lg"
+                        animate={{ rotate: [5, -5] }}
+                        transition={{ duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 0.5 }}
+                    />
+
+                    {/* Cake Glow */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gold-400/15 blur-[60px] w-48 h-48 rounded-full animate-pulse-slow mix-blend-screen pointer-events-none" />
+                    
+                    {/* Main Cake - Increased Float Amplitude */}
+                    <motion.img 
+                        src="https://father-1304746462.cos.ap-nanjing.myqcloud.com/father/img/1D216DAA-0A4D-4921-81D9-BC7BD7607C4D.png" 
+                        alt="Birthday Cake" 
+                        className="w-48 h-48 object-contain relative z-10 drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
+                        animate={{ y: [0, -20, 0] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                 </div>
             </motion.div>
 
             {/* Grid for 3 games */}

@@ -261,7 +261,7 @@ const StarBottleGame: React.FC = () => {
                              </div>
                              
                              <h3 className="text-xl font-serif text-gold-300 mb-6 font-bold mt-6 leading-relaxed">
-                                恭喜你收集到了<br/>一颗「超级幸运星」！
+                                恭喜你收集到了<br/>一颗「212号超级幸运星」！！！
                              </h3>
                             
                              {/* Ticket/Coupon Visual */}
@@ -277,9 +277,11 @@ const StarBottleGame: React.FC = () => {
                                   <p className="text-gold-200/60 text-[10px] mb-3 tracking-[0.3em] uppercase">Special Coupon</p>
                                   <p className="text-white text-base font-serif mb-2 opacity-90">凭此凭证，可兑换：</p>
                                   <div className="py-2 border-t border-b border-white/10 my-3">
-                                      <p className="text-gold-300 text-xl font-bold tracking-wide">奶茶啵啵一杯 🧋</p>
+                                      <p className="text-gold-300 text-xl font-bold tracking-wide">奶茶啵啵加大份珍珠六杯🧋</p>
+                                      <p className="text-gold-300 text-xl font-bold tracking-wide">瑞幸咖啡踩雷测评二次☕️</p>
+                                       <p className="text-gold-300 text-xl font-bold tracking-wide">跑步/骑行VIP陪伴服务一次</p>
                                   </div>
-                                  <p className="text-white/40 text-xs font-light">（少糖也很甜那种）</p>
+                                  <p className="text-white/40 text-xs font-light">凭截图为证</p>
                              </div>
     
                              <p className="text-gold-200/50 text-xs mb-6 font-mono bg-white/5 inline-block px-3 py-1 rounded-full">
